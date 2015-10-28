@@ -38,16 +38,16 @@ def main(args):
 
   if args.s1s:
     if args.drawingTools:
-      makeEffPurPlots(beamOut, gasOut, beamPot, gasPot, "{0}_s1s".format(args.plotFolder))
+      makeEffPurPlots(args, beamOut, gasOut, beamPot, gasPot, "{0}_s1s".format(args.plotFolder))
     else:
-      makeEffPurPlots2(beamOut, gasOut, beamPot, gasPot, "{0}_s1s".format(args.plotFolder))
+      makeEffPurPlots2(args, beamOut, gasOut, beamPot, gasPot, "{0}_s1s".format(args.plotFolder))
   else:
     if args.drawingTools:
-      makeEffPurPlots(beamOut, gasOut, beamPot, gasPot, "{0}_all".format(args.plotFolder))
+      makeEffPurPlots(args, beamOut, gasOut, beamPot, gasPot, "{0}_all".format(args.plotFolder))
     else:
-      makeEffPurPlots2(beamOut, gasOut, beamPot, gasPot, "{0}_all".format(args.plotFolder))
+      makeEffPurPlots2(args, beamOut, gasOut, beamPot, gasPot, "{0}_all".format(args.plotFolder))
 
-def makeEffPurPlots(beamOut, gasOut, beamPot, gasPot, folder="plots"):
+def makeEffPurPlots(args, beamOut, gasOut, beamPot, gasPot, folder="plots"):
   '''Make efficiency and purity plots with the drawing tools'''
 
   subprocess.call(["mkdir", "-p", folder])
@@ -80,7 +80,7 @@ def makeEffPurPlots(beamOut, gasOut, beamPot, gasPot, folder="plots"):
   #print pad
   #myHist = myCanv.GetPrimitive("hist_name")
 
-def makeEffPurPlots2(beamOut, gasOut, beamPot, gasPot, folder="plots", cuts=7):
+def makeEffPurPlots2(args, beamOut, gasOut, beamPot, gasPot, folder="plots", cuts=7):
   '''Manual creation of efficiency and purity plots for cross checking'''
 
   subprocess.call(["mkdir", "-p", folder])
@@ -95,6 +95,15 @@ def makeEffPurPlots2(beamOut, gasOut, beamPot, gasPot, folder="plots", cuts=7):
               "TPC FV",
               "Ends TPC FV",
               "Delta ray cut",   ]
+
+  if len(args.extraVars) > 0:
+    pos = args.extraVarsPos
+    if pos == -1:
+      cutBins = cutBins + args.extraVars
+    elif pos < 0:
+      cutBins = cutBins[:pos+1] + args.extraVars + cutBins[pos+1:]
+    else:
+      cutBins = cutBins[:pos] + args.extraVars + cutBins[pos:]
 
   # get ntuples
   beamFile = ROOT.TFile.Open(beamOut)
@@ -233,6 +242,10 @@ def checkArguments():
   parser.add_argument("--s1s", action="store_true", help="Analyse stage one selection passed data sets")
   parser.add_argument("--drawingTools", action="store_true", help="Use default drawing tools methods for making plots")
   parser.add_argument("--plotFolder", type=str, help="Folder to put plots in", default="plots")
+
+  parser.add_argument("--extraVars", type=str, nargs="+", help="Extra variables to plot")
+  parser.add_argument("--extraVarsPos", type=int, help="Place to slot extra variables", default=-1)
+
   return parser.parse_args()
 
 if __name__ == "__main__":
