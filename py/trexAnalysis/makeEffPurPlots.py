@@ -108,44 +108,70 @@ def makeEffPurPlots2(args, beamOut, gasOut, beamPot, gasPot, folder="plots", cut
   # get ntuples
   beamFile = ROOT.TFile.Open(beamOut)
   gasFile = ROOT.TFile.Open(gasOut)
-  beamTree = beamFile.Get("default")
-  gasTree = gasFile.Get("default")
+  beamDefaultTree = beamFile.Get("default")
+  gasDefaultTree = gasFile.Get("default")
+  beamTrueTree = beamFile.Get("truth")
+  gasTrueTree = gasFile.Get("truth")
 
   # fill accum levels for beam and gas
   binN = len(cutBins)
   binLow = 0.5
   binUp = binLow + float(binN)
-  histBeam = ROOT.TH1D("beam", "Efficiency and purity", binN,binLow,binUp)
-  histGas = ROOT.TH1D("gas", "Efficiency and purity", binN,binLow,binUp)
-  histBeamTotal = ROOT.TH1D("totalBeam", "Efficiency and purity", binN,binLow,binUp)
-  histGasTotal = ROOT.TH1D("totalGas", "Efficiency and purity", binN,binLow,binUp)
-  histBeamRejected = ROOT.TH1D("beamRejected", "Efficiency and purity", binN,binLow,binUp)
-  histSurviving = ROOT.TH1D("totalSurviving", "Efficiency and purity", binN,binLow,binUp)
 
-  histBeam.Sumw2()
-  histGas.Sumw2()
-  histGasTotal.Sumw2()
-  histBeamRejected.Sumw2()
-  histSurviving.Sumw2()
+  histTrueTotal = ROOT.TH1D("trueTotal", "Efficiency and purity", binN,binLow,binUp)
+  histTrueSelected = ROOT.TH1D("trueSelected", "Efficiency and purity", binN,binLow,binUp)
+  histBeamTotal = ROOT.TH1D("beamTotal", "Efficiency and purity", binN,binLow,binUp)
+  histBeamSelected = ROOT.TH1D("beamSelected", "Efficiency and purity", binN,binLow,binUp)
+  histBeamTrueTotal = ROOT.TH1D("beamTrueTotal", "Efficiency and purity", binN,binLow,binUp)
+  histBeamTrueSelected = ROOT.TH1D("beamTrueSelected", "Efficiency and purity", binN,binLow,binUp)
+  histTotalSelected = ROOT.TH1D("totalSelected", "Efficiency and purity", binN,binLow,binUp)
+
+  histTrueTotal.Sumw2()
+  histTrueSelected.Sumw2()
+  histBeamTotal.Sumw2()
+  histBeamSelected.Sumw2()
+  histBeamTrueTotal.Sumw2()
+  histBeamTrueSelected.Sumw2()
+  histTotalSelected.Sumw2()
 
   # fill histograms with weights
+
+  # beam
   beamNorm = 1./beamPot
-  for entry in beamTree:
+
+  for entry in beamDefaultTree:
     for i in range(binN):
       histBeamTotal.Fill(i+1, beamNorm)
       if(i <= entry.accum_level[0]):
-        histSurviving.Fill(i+1, beamNorm)
-        histBeam.Fill(i+1, beamNorm)
-      else:
-        histBeamRejected.Fill(i+1, beamNorm)
+        histBeamSelected.Fill(i+1, beamNorm)
+        histTotalSelected.Fill(i+1, beamNorm)
 
-  gasNorm = 1./gasPot
-  for entry in gasTree:
+  for entry in beamTrueTree:
     for i in range(binN):
-      histGasTotal.Fill(i+1, gasNorm)
-      if(i <= entry.accum_level[0]):
-        histSurviving.Fill(i+1, gasNorm)
-        histGas.Fill(i+1, gasNorm)
+      histTrueTotal.Fill(i+1, beamNorm)
+      histBeamTrueTotal.Fill(i+1, beamNorm)
+      if(i <= entry.accum_level):
+        histTrueSelected.Fill(i+1, beamNorm)
+        histBeamTrueSelected.Fill(i+1, beamNorm)
+
+  # gas
+  gasNorm = 1./gasPot
+
+  for entry in gasTrueTree:
+    for i in range(binN):
+      histTrueTotal.Fill(i+1, gasNorm)
+      if(i <= entry.accum_level):
+        histTrueSelected.Fill(i+1, gasNorm)
+        histTotalSelected.Fill(i+1, gasNorm)
+
+  # calculate number of non-gas interactions selected
+  histFalseTotal = ROOT.TH1D("falseTotal", "Efficiency and purity", binN,binLow,binUp)
+  histFalseSelected = ROOT.TH1D("falseSelected", "Efficiency and purity", binN,binLow,binUp)
+
+  histFalseTotal.Add(histBeamTotal)
+  histFalseTotal.Add(histBeamTrueTotal, -1)
+  histFalseSelected.Add(histBeamSelected)
+  histFalseSelected.Add(histBeamTrueSelected, -1)
 
   # calculate efficiency and purity and signal selection and background rejection from histograms
   histEff = ROOT.TH1D("eff", "Efficiency and purity", binN,binLow,binUp)
@@ -153,17 +179,17 @@ def makeEffPurPlots2(args, beamOut, gasOut, beamPot, gasPot, folder="plots", cut
   histSel = ROOT.TH1D("sel", "Signal selection", binN,binLow,binUp)
   histRej = ROOT.TH1D("rej", "Background rejection", binN,binLow,binUp)
 
-  histEff.Add(histGas)
-  histEff.Divide(histGasTotal)
+  histEff.Add(histTrueSelected)
+  histEff.Divide(histTrueTotal)
 
-  histPur.Add(histSurviving)
-  histPur.Add(histBeam, -1.)
-  histPur.Divide(histSurviving)
+  histPur.Add(histTrueSelected)
+  histPur.Divide(histTotalSelected)
 
-  histSel.Add(histGas)
-  histSel.Divide(histGasTotal)
+  histSel.Add(histTrueSelected)
+  histSel.Divide(histTrueTotal)
 
-  histRej.Add(histBeamRejected)
+  histRej.Add(histBeamTotal)
+  histRej.Add(histBeamSelected, -1.)
   histRej.Divide(histBeamTotal)
 
   # set bin cutBins and errors vanishingly close to zero for now
@@ -243,7 +269,7 @@ def checkArguments():
   parser.add_argument("--drawingTools", action="store_true", help="Use default drawing tools methods for making plots")
   parser.add_argument("--plotFolder", type=str, help="Folder to put plots in", default="plots")
 
-  parser.add_argument("--extraVars", type=str, nargs="+", help="Extra variables to plot")
+  parser.add_argument("--extraVars", type=str, nargs="+", help="Extra variables to plot", default=[])
   parser.add_argument("--extraVarsPos", type=int, help="Place to slot extra variables", default=-1)
 
   return parser.parse_args()
