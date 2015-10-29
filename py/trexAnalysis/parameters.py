@@ -30,6 +30,8 @@ class Dirs:
 
 # lists of files
 class Lists:
+  oldReducedNeutBeam = "{0}/oldReducedNeutBeam.list".format(Dirs.lists)
+  oldReducedNeutGas = "{0}/oldReducedNeutGas.list".format(Dirs.lists)
   neutBeam = "{0}/neutBeam.list".format(Dirs.lists)
   neutGas = "{0}/neutGas.list".format(Dirs.lists)
   reducedNeutBeam = "{0}/reducedNeutBeam.list".format(Dirs.lists)

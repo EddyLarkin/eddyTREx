@@ -10,7 +10,13 @@ def main(args):
   gasList = ""
   beamOut = ""
   gasOut = ""
-  if args.s1s:
+
+  if args.oldTREx:
+    beamList = trexAnalysis.parameters.Lists.oldReducedNeutBeam
+    gasList = trexAnalysis.parameters.Lists.oldReducedNeutGas
+    beamOut = trexAnalysis.parameters.NTuples.reducedNeutBeam
+    gasOut = trexAnalysis.parameters.NTuples.reducedNeutGas
+  elif args.s1s:
     if args.full:
       beamList = trexAnalysis.parameters.Lists.s1sNeutBeam
       gasList = trexAnalysis.parameters.Lists.s1sNeutGas
@@ -46,6 +52,7 @@ def checkArguments():
   parser.add_argument("--gasOnly", action="store_true", help="Process only gas MC")
   parser.add_argument("--beamOnly", action="store_true", help="Process only beam MC")
   parser.add_argument("--s1s", action="store_true", help="Use files produced with stage 1 selection")
+  parser.add_argument("--oldTREx", action="store_true", help="Use older version of TREx software")
   return parser.parse_args()
 
 if __name__ == "__main__":
