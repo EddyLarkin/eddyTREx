@@ -71,14 +71,19 @@ def makeEffPurPlots(args, beamOut, gasOut, beamPot, gasPot, folder="plots"):
   myCanv.cd()
 
   drawer = ROOT.DrawingTools(beamOut)
-  drawer.DrawEffPurVSCut(exp, "target==18", "", -1,-1, "")
+  drawer.DrawEffPurVSCut(exp, "(target==18) && (nu_pdg==14) && (nu_truereac>0) && (nu_truereac<30)", "", -1,-1, "")
 
   myCanv.SaveAs("{0}/effPur.png".format(folder))
 
   # get hist to print purity information
-  #pad = myCanv.Get("myCanv")
-  #print pad
-  #myHist = myCanv.GetPrimitive("hist_name")
+  graphEff = myCanv.GetPrimitive("eff_39")
+  graphPur = myCanv.GetPrimitive("eff_115")
+  histEff = graphEff.GetHistogram()
+  histPur = graphPur.GetHistogram()
+  finalEff = histEff.GetBinContent( histEff.GetNbinsX() )
+  finalPur = histPur.GetBinContent( histPur.GetNbinsX() )
+  print "Final efficiency: {0}%".format(finalEff*100.)
+  print "Final purity: {0}%".format(finalPur*100.)
 
 def makeEffPurPlots2(args, beamOut, gasOut, beamPot, gasPot, folder="plots", cuts=7):
   '''Manual creation of efficiency and purity plots for cross checking'''
@@ -140,38 +145,33 @@ def makeEffPurPlots2(args, beamOut, gasOut, beamPot, gasPot, folder="plots", cut
   beamNorm = 1./beamPot
 
   for entry in beamDefaultTree:
-    for i in range(binN):
-      histBeamTotal.Fill(i+1, beamNorm)
-      if(i <= entry.accum_level[0]):
-        histBeamSelected.Fill(i+1, beamNorm)
-        histTotalSelected.Fill(i+1, beamNorm)
-
-  for entry in beamTrueTree:
-    for i in range(binN):
-      histTrueTotal.Fill(i+1, beamNorm)
-      histBeamTrueTotal.Fill(i+1, beamNorm)
-      if(i <= entry.accum_level):
-        histTrueSelected.Fill(i+1, beamNorm)
-        histBeamTrueSelected.Fill(i+1, beamNorm)
+    if getIsGas(entry):
+      for i in range(binN):
+        histTrueTotal.Fill(i+1, beamNorm)
+        histBeamTotal.Fill(i+1, beamNorm)
+        histBeamTrueTotal.Fill(i+1, beamNorm)
+        if(i <= entry.accum_level[0]):
+          histTrueSelected.Fill(i+1, beamNorm)
+          histBeamSelected.Fill(i+1, beamNorm)
+          histBeamTrueSelected.Fill(i+1, beamNorm)
+          histTotalSelected.Fill(i+1, beamNorm)
+    else:
+      for i in range(binN):
+        histBeamTotal.Fill(i+1, beamNorm)
+        if(i <= entry.accum_level[0]):
+          histBeamSelected.Fill(i+1, beamNorm)
+          histTotalSelected.Fill(i+1, beamNorm)
 
   # gas
   gasNorm = 1./gasPot
 
-  for entry in gasTrueTree:
-    for i in range(binN):
-      histTrueTotal.Fill(i+1, gasNorm)
-      if(i <= entry.accum_level):
-        histTrueSelected.Fill(i+1, gasNorm)
-        histTotalSelected.Fill(i+1, gasNorm)
-
-  # calculate number of non-gas interactions selected
-  histFalseTotal = ROOT.TH1D("falseTotal", "Efficiency and purity", binN,binLow,binUp)
-  histFalseSelected = ROOT.TH1D("falseSelected", "Efficiency and purity", binN,binLow,binUp)
-
-  histFalseTotal.Add(histBeamTotal)
-  histFalseTotal.Add(histBeamTrueTotal, -1)
-  histFalseSelected.Add(histBeamSelected)
-  histFalseSelected.Add(histBeamTrueSelected, -1)
+  for entry in gasDefaultTree:
+    if getIsGas(entry):
+      for i in range(binN):
+        histTrueTotal.Fill(i+1, gasNorm)
+        if(i <= entry.accum_level[0]):
+          histTrueSelected.Fill(i+1, gasNorm)
+          histTotalSelected.Fill(i+1, gasNorm)
 
   # calculate efficiency and purity and signal selection and background rejection from histograms
   histEff = ROOT.TH1D("eff", "Efficiency and purity", binN,binLow,binUp)
@@ -257,10 +257,23 @@ def makeEffPurPlots2(args, beamOut, gasOut, beamPot, gasPot, folder="plots", cut
 
   # TODO: work out why efficiency goes up with s1s in place
   effFinal = histEff.GetBinContent( histEff.GetNbinsX() )
-  print "Final efficiency: {0}%".format(effFinal)
+  print "Final efficiency: {0}%".format(effFinal*100.)
 
   purFinal = histPur.GetBinContent( histPur.GetNbinsX() )
-  print "Final purity: {0}%".format(purFinal)
+  print "Final purity: {0}%".format(purFinal*100.)
+
+def getIsGas(entry):
+  isTrue = True
+
+  # in fiducial volume
+  #isTrue &= (entry.Vertex_true_in_fiducial == 1)
+  # on argon
+  isTrue &= (entry.target == 18)
+  # numu CC
+  isTrue &= (entry.nu_pdg == 14)
+  isTrue &= (entry.nu_truereac > 0 and entry.nu_truereac < 30)
+
+  return isTrue
 
 def checkArguments():
   parser = argparse.ArgumentParser(description="Produce plots for gas and beam")
