@@ -11,7 +11,7 @@ def potFromListFile(inFile, perFile=1.):
 
 class Dirs:
   # root path to files
-  laptopRoot = "/home/eddy/t2k/workspaces/highlandGasInteractions/eddyTREx"
+  laptopRoot = "/home/eddy/t2k/workspaces/highlandGasInteractions/highland2/eddyTREx"
   laptopID = "eddyLaptop"
 
   #TODO set up to work on other machines
@@ -30,8 +30,6 @@ class Dirs:
 
 # lists of files
 class Lists:
-  oldReducedNeutBeam = "{0}/oldReducedNeutBeam.list".format(Dirs.lists)
-  oldReducedNeutGas = "{0}/oldReducedNeutGas.list".format(Dirs.lists)
   neutBeam = "{0}/neutBeam.list".format(Dirs.lists)
   neutGas = "{0}/neutGas.list".format(Dirs.lists)
   reducedNeutBeam = "{0}/reducedNeutBeam.list".format(Dirs.lists)

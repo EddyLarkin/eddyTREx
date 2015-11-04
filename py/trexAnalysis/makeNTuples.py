@@ -11,12 +11,7 @@ def main(args):
   beamOut = ""
   gasOut = ""
 
-  if args.oldTREx:
-    beamList = trexAnalysis.parameters.Lists.oldReducedNeutBeam
-    gasList = trexAnalysis.parameters.Lists.oldReducedNeutGas
-    beamOut = trexAnalysis.parameters.NTuples.reducedNeutBeam
-    gasOut = trexAnalysis.parameters.NTuples.reducedNeutGas
-  elif args.s1s:
+  if args.s1s:
     if args.full:
       beamList = trexAnalysis.parameters.Lists.s1sNeutBeam
       gasList = trexAnalysis.parameters.Lists.s1sNeutGas
@@ -39,6 +34,10 @@ def main(args):
       beamOut = trexAnalysis.parameters.NTuples.reducedNeutBeam
       gasOut = trexAnalysis.parameters.NTuples.reducedNeutGas
 
+  if len(args.filesID):
+    beamList = "{0}/{1}Beam.list".format(trexAnalysis.parameters.Dirs.lists, args.filesID)
+    gasList = "{0}/{1}Gas.list".format(trexAnalysis.parameters.Dirs.lists, args.filesID)
+
   if not args.gasOnly:
     subprocess.call(["rm", "-f", beamOut])
     subprocess.call(["RunTRExAnalysis.exe", "-v", "-o", beamOut, beamList])
@@ -53,6 +52,9 @@ def checkArguments():
   parser.add_argument("--beamOnly", action="store_true", help="Process only beam MC")
   parser.add_argument("--s1s", action="store_true", help="Use files produced with stage 1 selection")
   parser.add_argument("--oldTREx", action="store_true", help="Use older version of TREx software")
+
+  parser.add_argument("--filesID", type=str, help="Identifier for files to run over", default="")
+
   return parser.parse_args()
 
 if __name__ == "__main__":

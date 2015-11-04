@@ -13,6 +13,7 @@ def main(args):
   gasOut = ""
   beamPot = 1.
   gasPot = 1.
+
   if args.s1s:
     if args.full:
       beamOut = trexAnalysis.parameters.NTuples.s1sNeutBeam
@@ -75,15 +76,15 @@ def makeEffPurPlots(args, beamOut, gasOut, beamPot, gasPot, folder="plots"):
 
   myCanv.SaveAs("{0}/effPur.png".format(folder))
 
-  # get hist to print purity information
-  graphEff = myCanv.GetPrimitive("eff_39")
-  graphPur = myCanv.GetPrimitive("eff_115")
-  histEff = graphEff.GetHistogram()
-  histPur = graphPur.GetHistogram()
-  finalEff = histEff.GetBinContent( histEff.GetNbinsX() )
-  finalPur = histPur.GetBinContent( histPur.GetNbinsX() )
-  print "Final efficiency: {0}%".format(finalEff*100.)
-  print "Final purity: {0}%".format(finalPur*100.)
+  # TODO: get hist to print purity information
+  #graphEff = myCanv.GetPrimitive("eff_39")
+  #graphPur = myCanv.GetPrimitive("eff_115")
+  #histEff = graphEff.GetHistogram()
+  #histPur = graphPur.GetHistogram()
+  #finalEff = histEff.GetBinContent( histEff.GetNbinsX() )
+  #finalPur = histPur.GetBinContent( histPur.GetNbinsX() )
+  #print "Final efficiency: {0}%".format(finalEff*100.)
+  #print "Final purity: {0}%".format(finalPur*100.)
 
 def makeEffPurPlots2(args, beamOut, gasOut, beamPot, gasPot, folder="plots", cuts=7):
   '''Manual creation of efficiency and purity plots for cross checking'''
@@ -98,7 +99,7 @@ def makeEffPurPlots2(args, beamOut, gasOut, beamPot, gasPot, folder="plots", cut
               "Candidate paths",
               "Muon PID",
               "TPC FV",
-              "Ends TPC FV",
+              "Strict TPC FV",
               "Delta ray cut",   ]
 
   if len(args.extraVars) > 0:
