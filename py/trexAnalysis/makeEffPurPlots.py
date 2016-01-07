@@ -95,12 +95,16 @@ def makeEffPurPlots2(args, beamOut, gasOut, beamPot, gasPot, folder="plots", cut
 
   cutBins = [ "Uncut",
               "Event quality",
-              "Track exists",
+              "Tracks exist",
               "Candidate paths",
               "Muon PID",
               "TPC FV",
               "Strict TPC FV",
-              "Delta ray cut",   ]
+              "Delta ray cut",
+              "Broken track cut",
+              "Candidate global path",
+              "Global muon PID",
+              "Global track match     " ]
 
   if len(args.extraVars) > 0:
     pos = args.extraVarsPos
@@ -126,18 +130,14 @@ def makeEffPurPlots2(args, beamOut, gasOut, beamPot, gasPot, folder="plots", cut
 
   histTrueTotal = ROOT.TH1D("trueTotal", "Efficiency and purity", binN,binLow,binUp)
   histTrueSelected = ROOT.TH1D("trueSelected", "Efficiency and purity", binN,binLow,binUp)
-  histBeamTotal = ROOT.TH1D("beamTotal", "Efficiency and purity", binN,binLow,binUp)
-  histBeamSelected = ROOT.TH1D("beamSelected", "Efficiency and purity", binN,binLow,binUp)
-  histBeamTrueTotal = ROOT.TH1D("beamTrueTotal", "Efficiency and purity", binN,binLow,binUp)
-  histBeamTrueSelected = ROOT.TH1D("beamTrueSelected", "Efficiency and purity", binN,binLow,binUp)
+  histBgTotal = ROOT.TH1D("beamTotal", "Efficiency and purity", binN,binLow,binUp)
+  histBgSelected = ROOT.TH1D("beamSelected", "Efficiency and purity", binN,binLow,binUp)
   histTotalSelected = ROOT.TH1D("totalSelected", "Efficiency and purity", binN,binLow,binUp)
 
   histTrueTotal.Sumw2()
   histTrueSelected.Sumw2()
-  histBeamTotal.Sumw2()
-  histBeamSelected.Sumw2()
-  histBeamTrueTotal.Sumw2()
-  histBeamTrueSelected.Sumw2()
+  histBgTotal.Sumw2()
+  histBgSelected.Sumw2()
   histTotalSelected.Sumw2()
 
   # fill histograms with weights
@@ -145,33 +145,30 @@ def makeEffPurPlots2(args, beamOut, gasOut, beamPot, gasPot, folder="plots", cut
   # beam
   beamNorm = 1./beamPot
 
+  # ignore gas events in beam
   for entry in beamDefaultTree:
-    if getIsGas(entry):
+    if not getIsGas(entry):
       for i in range(binN):
-        histTrueTotal.Fill(i+1, beamNorm)
-        histBeamTotal.Fill(i+1, beamNorm)
-        histBeamTrueTotal.Fill(i+1, beamNorm)
+        histBgTotal.Fill(i+1, beamNorm)
         if(i <= entry.accum_level[0]):
-          histTrueSelected.Fill(i+1, beamNorm)
-          histBeamSelected.Fill(i+1, beamNorm)
-          histBeamTrueSelected.Fill(i+1, beamNorm)
-          histTotalSelected.Fill(i+1, beamNorm)
-    else:
-      for i in range(binN):
-        histBeamTotal.Fill(i+1, beamNorm)
-        if(i <= entry.accum_level[0]):
-          histBeamSelected.Fill(i+1, beamNorm)
+          histBgSelected.Fill(i+1, beamNorm)
           histTotalSelected.Fill(i+1, beamNorm)
 
-  # gas
   gasNorm = 1./gasPot
 
+  # count non-signal events in gas
   for entry in gasDefaultTree:
-    if getIsGas(entry):
+    if getIsTrue(entry):
       for i in range(binN):
         histTrueTotal.Fill(i+1, gasNorm)
         if(i <= entry.accum_level[0]):
           histTrueSelected.Fill(i+1, gasNorm)
+          histTotalSelected.Fill(i+1, gasNorm)
+    else:
+      for i in range(binN):
+        histBgTotal.Fill(i+1, gasNorm)
+        if(i <= entry.accum_level[0]):
+          histBgSelected.Fill(i+1, gasNorm)
           histTotalSelected.Fill(i+1, gasNorm)
 
   # calculate efficiency and purity and signal selection and background rejection from histograms
@@ -189,16 +186,16 @@ def makeEffPurPlots2(args, beamOut, gasOut, beamPot, gasPot, folder="plots", cut
   histSel.Add(histTrueSelected)
   histSel.Divide(histTrueTotal)
 
-  histRej.Add(histBeamTotal)
-  histRej.Add(histBeamSelected, -1.)
-  histRej.Divide(histBeamTotal)
+  histRej.Add(histBgTotal)
+  histRej.Add(histBgSelected, -1.)
+  histRej.Divide(histBgTotal)
 
   # set bin cutBins and errors vanishingly close to zero for now
   for i in range(len(cutBins)):
-    histEff.SetBinError(i+1, .000001)
-    histPur.SetBinError(i+1, .000001)
-    histSel.SetBinError(i+1, .000001)
-    histRej.SetBinError(i+1, .000001)
+    #histEff.SetBinError(i+1, .000001)
+    #histPur.SetBinError(i+1, .000001)
+    #histSel.SetBinError(i+1, .000001)
+    #histRej.SetBinError(i+1, .000001)
 
     histEff.GetXaxis().SetBinLabel(i+1, cutBins[i])
     histPur.GetXaxis().SetBinLabel(i+1, cutBins[i])
@@ -258,12 +255,32 @@ def makeEffPurPlots2(args, beamOut, gasOut, beamPot, gasPot, folder="plots", cut
 
   # TODO: work out why efficiency goes up with s1s in place
   effFinal = histEff.GetBinContent( histEff.GetNbinsX() )
-  print "Final efficiency: {0}%".format(effFinal*100.)
+  print "Final signal efficiency: {0}%".format(effFinal*100.)
+  rejFinal = histRej.GetBinContent( histRej.GetNbinsX() )
+  print "Final background rejection: {0}%".format(rejFinal*100.)
 
-  purFinal = histPur.GetBinContent( histPur.GetNbinsX() )
-  print "Final purity: {0}%".format(purFinal*100.)
+  if args.checkVar:
+    i = args.checkVarID
+    if i < 0:
+      i = len(cutBins) + i
+
+      effBefore = histEff.GetBinContent(i)
+      rejBefore = histRej.GetBinContent(i)
+      effAfter = histEff.GetBinContent(i+1)
+      rejAfter = histRej.GetBinContent(i+1)
+
+      print "Signal efficiency before and after cut \"{0}\"".format(cutBins[i])
+      print "   before: {0}%".format(effBefore*100.)
+      print "   after : {0}%  ({1}% less signal)".format(effAfter*100., (effAfter/effBefore)*100.)
+      print "Background rejection before and after cut \"{0}\"".format(cutBins[i])
+      print "   before: {0}%".format(rejBefore*100.)
+      print "   after : {0}%  ({1}% less background)".format(rejAfter*100., ((1.-rejAfter)/(1.-rejBefore))*100.)
 
 def getIsGas(entry):
+  # NOTE definition here discards 5% of gas events not on argon
+  return (entry.target == 18)
+
+def getIsTrue(entry):
   isTrue = True
 
   # in fiducial volume
@@ -285,6 +302,9 @@ def checkArguments():
 
   parser.add_argument("--extraVars", type=str, nargs="+", help="Extra variables to plot", default=[])
   parser.add_argument("--extraVarsPos", type=int, help="Place to slot extra variables", default=-1)
+
+  parser.add_argument("--checkVar", action="store_true", help="Check performance before and after specific var")
+  parser.add_argument("--checkVarID", type=int, help="Position of variable to check performance at", default=-1)
 
   return parser.parse_args()
 
