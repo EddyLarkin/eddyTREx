@@ -25,16 +25,10 @@ def main(args):
     beamPot = trexAnalysis.parameters.Pots.listReducedNeutBeam
     gasPot = trexAnalysis.parameters.Pots.listReducedNeutGas
 
-  if args.s1s:
-    if args.drawingTools:
-      makeEffPurPlots(args, beamOut, gasOut, beamPot, gasPot, "{0}_s1s".format(args.plotFolder))
-    else:
-      makeEffPurPlots2(args, beamOut, gasOut, beamPot, gasPot, "{0}_s1s".format(args.plotFolder))
+  if args.drawingTools:
+    makeEffPurPlots(args, beamOut, gasOut, beamPot, gasPot, "{0}_all".format(args.plotFolder))
   else:
-    if args.drawingTools:
-      makeEffPurPlots(args, beamOut, gasOut, beamPot, gasPot, "{0}_all".format(args.plotFolder))
-    else:
-      makeEffPurPlots2(args, beamOut, gasOut, beamPot, gasPot, "{0}_all".format(args.plotFolder))
+    makeEffPurPlots2(args, beamOut, gasOut, beamPot, gasPot, "{0}_all".format(args.plotFolder))
 
 def makeEffPurPlots(args, beamOut, gasOut, beamPot, gasPot, folder="plots"):
   '''Make efficiency and purity plots with the drawing tools'''
@@ -241,7 +235,6 @@ def makeEffPurPlots2(args, beamOut, gasOut, beamPot, gasPot, folder="plots", cut
 
   myCanv.SaveAs("{0}/backgroundRejection.png".format(folder))
 
-  # TODO: work out why efficiency goes up with s1s in place
   effFinal = histEff.GetBinContent( histEff.GetNbinsX() )
   print "Final signal efficiency: {0}%".format(effFinal*100.)
   rejFinal = histRej.GetBinContent( histRej.GetNbinsX() )
