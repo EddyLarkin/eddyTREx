@@ -11,28 +11,16 @@ def main(args):
   beamOut = ""
   gasOut = ""
 
-  if args.s1s:
-    if args.full:
-      beamList = trexAnalysis.parameters.Lists.s1sNeutBeam
-      gasList = trexAnalysis.parameters.Lists.s1sNeutGas
-      beamOut = trexAnalysis.parameters.NTuples.s1sNeutBeam
-      gasOut = trexAnalysis.parameters.NTuples.s1sNeutGas
-    else:
-      beamList = trexAnalysis.parameters.Lists.s1sReducedNeutBeam
-      gasList = trexAnalysis.parameters.Lists.s1sReducedNeutGas
-      beamOut = trexAnalysis.parameters.NTuples.s1sReducedNeutBeam
-      gasOut = trexAnalysis.parameters.NTuples.s1sReducedNeutGas
+  if args.full:
+    beamList = trexAnalysis.parameters.Lists.neutBeam
+    gasList = trexAnalysis.parameters.Lists.neutGas
+    beamOut = trexAnalysis.parameters.NTuples.neutBeam
+    gasOut = trexAnalysis.parameters.NTuples.neutGas
   else:
-    if args.full:
-      beamList = trexAnalysis.parameters.Lists.neutBeam
-      gasList = trexAnalysis.parameters.Lists.neutGas
-      beamOut = trexAnalysis.parameters.NTuples.neutBeam
-      gasOut = trexAnalysis.parameters.NTuples.neutGas
-    else:
-      beamList = trexAnalysis.parameters.Lists.reducedNeutBeam
-      gasList = trexAnalysis.parameters.Lists.reducedNeutGas
-      beamOut = trexAnalysis.parameters.NTuples.reducedNeutBeam
-      gasOut = trexAnalysis.parameters.NTuples.reducedNeutGas
+    beamList = trexAnalysis.parameters.Lists.reducedNeutBeam
+    gasList = trexAnalysis.parameters.Lists.reducedNeutGas
+    beamOut = trexAnalysis.parameters.NTuples.reducedNeutBeam
+    gasOut = trexAnalysis.parameters.NTuples.reducedNeutGas
 
   if len(args.filesID):
     beamList = "{0}/{1}Beam.list".format(trexAnalysis.parameters.Dirs.lists, args.filesID)
@@ -50,7 +38,6 @@ def checkArguments():
   parser.add_argument("--full", action="store_true", help="Analyse full available data sets (default is reduced)")
   parser.add_argument("--gasOnly", action="store_true", help="Process only gas MC")
   parser.add_argument("--beamOnly", action="store_true", help="Process only beam MC")
-  parser.add_argument("--s1s", action="store_true", help="Use files produced with stage 1 selection")
   parser.add_argument("--oldTREx", action="store_true", help="Use older version of TREx software")
 
   parser.add_argument("--filesID", type=str, help="Identifier for files to run over", default="")

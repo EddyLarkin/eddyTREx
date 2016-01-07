@@ -14,28 +14,16 @@ def main(args):
   beamPot = 1.
   gasPot = 1.
 
-  if args.s1s:
-    if args.full:
-      beamOut = trexAnalysis.parameters.NTuples.s1sNeutBeam
-      gasOut = trexAnalysis.parameters.NTuples.s1sNeutGas
-      beamPot = trexAnalysis.parameters.Pots.listS1SNeutBeam
-      gasPot = trexAnalysis.parameters.Pots.listS1SNeutGas
-    else:
-      beamOut = trexAnalysis.parameters.NTuples.s1sReducedNeutBeam
-      gasOut = trexAnalysis.parameters.NTuples.s1sReducedNeutGas
-      beamPot = trexAnalysis.parameters.Pots.listS1SReducedNeutBeam
-      gasPot = trexAnalysis.parameters.Pots.listS1SReducedNeutGas
+  if args.full:
+    beamOut = trexAnalysis.parameters.NTuples.neutBeam
+    gasOut = trexAnalysis.parameters.NTuples.neutGas
+    beamPot = trexAnalysis.parameters.Pots.listNeutBeam
+    gasPot = trexAnalysis.parameters.Pots.listNeutGas
   else:
-    if args.full:
-      beamOut = trexAnalysis.parameters.NTuples.neutBeam
-      gasOut = trexAnalysis.parameters.NTuples.neutGas
-      beamPot = trexAnalysis.parameters.Pots.listNeutBeam
-      gasPot = trexAnalysis.parameters.Pots.listNeutGas
-    else:
-      beamOut = trexAnalysis.parameters.NTuples.reducedNeutBeam
-      gasOut = trexAnalysis.parameters.NTuples.reducedNeutGas
-      beamPot = trexAnalysis.parameters.Pots.listReducedNeutBeam
-      gasPot = trexAnalysis.parameters.Pots.listReducedNeutGas
+    beamOut = trexAnalysis.parameters.NTuples.reducedNeutBeam
+    gasOut = trexAnalysis.parameters.NTuples.reducedNeutGas
+    beamPot = trexAnalysis.parameters.Pots.listReducedNeutBeam
+    gasPot = trexAnalysis.parameters.Pots.listReducedNeutGas
 
   if args.s1s:
     if args.drawingTools:
@@ -296,7 +284,6 @@ def getIsTrue(entry):
 def checkArguments():
   parser = argparse.ArgumentParser(description="Produce plots for gas and beam")
   parser.add_argument("--full", action="store_true", help="Analyse full available data sets (default is reduced)")
-  parser.add_argument("--s1s", action="store_true", help="Analyse stage one selection passed data sets")
   parser.add_argument("--drawingTools", action="store_true", help="Use default drawing tools methods for making plots")
   parser.add_argument("--plotFolder", type=str, help="Folder to put plots in", default="plots")
 

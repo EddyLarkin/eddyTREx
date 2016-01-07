@@ -34,10 +34,6 @@ class Lists:
   neutGas = "{0}/neutGas.list".format(Dirs.lists)
   reducedNeutBeam = "{0}/reducedNeutBeam.list".format(Dirs.lists)
   reducedNeutGas = "{0}/reducedNeutGas.list".format(Dirs.lists)
-  s1sNeutBeam = "{0}/s1sNeutBeam.list".format(Dirs.lists)
-  s1sNeutGas = "{0}/s1sNeutGas.list".format(Dirs.lists)
-  s1sReducedNeutBeam = "{0}/s1sReducedNeutBeam.list".format(Dirs.lists)
-  s1sReducedNeutGas = "{0}/s1sReducedNeutGas.list".format(Dirs.lists)
 
 # relative weighting of files
 class Pots:
@@ -47,10 +43,6 @@ class Pots:
   listNeutGas = potFromListFile(Lists.neutGas, potPerFileGas)
   listReducedNeutBeam = potFromListFile(Lists.reducedNeutBeam, potPerFileBeam)
   listReducedNeutGas = potFromListFile(Lists.reducedNeutGas, potPerFileGas)
-  listS1SNeutBeam = potFromListFile(Lists.s1sNeutBeam, potPerFileBeam)
-  listS1SNeutGas = potFromListFile(Lists.s1sNeutGas, potPerFileGas)
-  listS1SReducedNeutBeam = potFromListFile(Lists.s1sReducedNeutBeam, potPerFileBeam)
-  listS1SReducedNeutGas = potFromListFile(Lists.s1sReducedNeutGas, potPerFileGas)
 
 # sample ntuples
 class NTuples:
@@ -58,7 +50,3 @@ class NTuples:
   neutGas = "{0}/neutGas.root".format(Dirs.data)
   reducedNeutBeam = "{0}/reducedNeutBeam.root".format(Dirs.data)
   reducedNeutGas = "{0}/reducedNeutGas.root".format(Dirs.data)
-  s1sNeutBeam = "{0}/s1sNeutBeam.root".format(Dirs.data)
-  s1sNeutGas = "{0}/s1sNeutGas.root".format(Dirs.data)
-  s1sReducedNeutBeam = "{0}/s1sReducedNeutBeam.root".format(Dirs.data)
-  s1sReducedNeutGas = "{0}/s1sReducedNeutGas.root".format(Dirs.data)
