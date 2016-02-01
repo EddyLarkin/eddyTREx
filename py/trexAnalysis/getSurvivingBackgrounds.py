@@ -62,7 +62,7 @@ def doAnalyse(args):
   print "# running analysis over {0}, giving {1}".format(args.listFile, args.analysisFile)
 
   subprocess.call(["rm", "-f", args.analysisFile])
-  subprocess.call(["RunTRExAnalysis.exe", "-v", "-n", str(args.nEvents), "-o", args.analysisFile, args.listFile])
+  subprocess.call(["RunTRExAnalysis.exe", "-v", "-o", args.analysisFile, args.listFile])
 
   print "  # produced {0}".format(args.analysisFile)
 
@@ -119,7 +119,7 @@ def checkArguments():
 
   parser.add_argument("-n", "--nEvents", type=int, help="Number of events to process", default=10000)
   parser.add_argument("--nFiles", type=int, help="Number of files to process", default=1)
-  parser.add_argument("--accumLevel", type=int, help="Accum level to count as passing", default=7)
+  parser.add_argument("--accumLevel", type=int, help="Accum level to count as passing", default=12)
 
   return parser.parse_args()
 

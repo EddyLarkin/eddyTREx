@@ -37,6 +37,9 @@ class Lists:
 
 # relative weighting of files
 class Pots:
+  potCurrentFHC = 6914 # x10^17 all data so far
+  potCurrentRHC = 4011 # x10^17 all data so far
+  potCurrent = potCurrentFHC
   potPerFileBeam = 5.   # x10^17
   potPerFileGas = 500.  # x10^17
   listNeutBeam = potFromListFile(Lists.neutBeam, potPerFileBeam)
