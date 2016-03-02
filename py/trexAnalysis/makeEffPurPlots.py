@@ -237,6 +237,8 @@ def makeEffPurPlots2(args, beamOut, gasOut, beamPot, gasPot, folder="plots", cut
 
   effFinal = histEff.GetBinContent( histEff.GetNbinsX() )
   print "Final signal efficiency: {0}%".format(effFinal*100.)
+  purFinal = histPur.GetBinContent( histEff.GetNbinsX() )
+  print "Final selection purity: {0}%".format(purFinal*100.)
   rejFinal = histRej.GetBinContent( histRej.GetNbinsX() )
   print "Final background rejection: {0}%".format(rejFinal*100.)
 

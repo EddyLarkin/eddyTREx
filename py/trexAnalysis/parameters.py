@@ -41,7 +41,8 @@ class Pots:
   potCurrentRHC = 4011 # x10^17 all data so far
   potCurrent = potCurrentFHC
   potPerFileBeam = 5.   # x10^17
-  potPerFileGas = 500.  # x10^17
+#  potPerFileGas = 500.  # x10^17
+  potPerFileGas = 5000. # x10^17
   listNeutBeam = potFromListFile(Lists.neutBeam, potPerFileBeam)
   listNeutGas = potFromListFile(Lists.neutGas, potPerFileGas)
   listReducedNeutBeam = potFromListFile(Lists.reducedNeutBeam, potPerFileBeam)
