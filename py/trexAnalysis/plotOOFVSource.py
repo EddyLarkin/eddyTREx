@@ -50,6 +50,26 @@ DET_BRANCHES = {
                  DET_OTHER:()
                                                   }
 
+DET_TPC_FV = "TPC FV"
+DET_TPC_FV_RANGE =  (
+                      (
+                        ( -1150., 1150.),
+                        ( -1170., 1170.),
+                        (  -885.,   89.)
+                                          ),
+                      (
+                        ( -1150., 1150.),
+                        ( -1170., 1170.),
+                        (   474., 1448.)
+                                          ),
+                      (
+                        ( -1150., 1150.),
+                        ( -1170., 1170.),
+                        (  1833., 2807.)
+                                          )
+                                            )
+
+
 def main(args):
   geomFile = ROOT.TFile.Open(args.geomFile)
   geomTree = geomFile.Get("HeaderDir/GeometrySummary")
@@ -63,6 +83,8 @@ def main(args):
     if entry.accum_level[0] > 12.5:
       vertexTruePos = (entry.Vertex_true_pos[0], entry.Vertex_true_pos[1], entry.Vertex_true_pos[2])
       print getDetector(detLimits, vertexTruePos)
+      if getInTPCFV(vertexTruePos):
+        print "!!!"
 
 def getLimits(args, inTree):
   # load ROOT libraries
@@ -107,6 +129,8 @@ def getDetector(limits, pos):
       inRange &= (pos[2] >= extentVals[2][0])
       inRange &= (pos[2] <= extentVals[2][1])
 
+      print extentVals
+
       if inRange:
         detector = det
         break
@@ -115,6 +139,25 @@ def getDetector(limits, pos):
       break
 
   return detector
+
+def getInTPCFV(pos):
+  inFV = False
+
+  for tpcRange in DET_TPC_FV_RANGE:
+    inRange = False
+
+    inRange &= (pos[0] >= tpcRange[0][0])
+    inRange &= (pos[0] <= tpcRange[0][1])
+    inRange &= (pos[1] >= tpcRange[1][0])
+    inRange &= (pos[1] <= tpcRange[1][1])
+    inRange &= (pos[2] >= tpcRange[2][0])
+    inRange &= (pos[2] <= tpcRange[2][1])
+
+    if(inRange):
+      inFV = True
+      break
+
+  return inFV
 
 
 def checkArguments():
