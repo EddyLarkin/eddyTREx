@@ -12,7 +12,6 @@ DET_ECAL = "ECal"
 DET_SMRD = "SMRD"
 DET_OTHER = "other"
 
-DET_ALL = { DET_TPC:0, DET_FGD:1, DET_P0D:2, DET_ECAL:3, DET_SMRD:4, DET_OTHER:5 }
 DET_BRANCHES = {
                  DET_TPC:(
                                "TPC1Extent",
@@ -53,17 +52,17 @@ DET_BRANCHES = {
 DET_TPC_FV = "TPC FV"
 DET_TPC_FV_RANGE =  (
                       (
-                        ( -1150., 1150.),
+                        (    20., 1150.),
                         ( -1170., 1170.),
                         (  -885.,   89.)
                                           ),
                       (
-                        ( -1150., 1150.),
+                        (    20., 1150.),
                         ( -1170., 1170.),
                         (   474., 1448.)
                                           ),
                       (
-                        ( -1150., 1150.),
+                        (    20., 1150.),
                         ( -1170., 1170.),
                         (  1833., 2807.)
                                           )
@@ -71,6 +70,11 @@ DET_TPC_FV_RANGE =  (
 
 
 def main(args):
+  # change ROOT plotting options
+  ROOT.gROOT.SetBatch(1)
+  ROOT.gStyle.SetOptStat(0)
+
+  # get geometry
   geomFile = ROOT.TFile.Open(args.geomFile)
   geomTree = geomFile.Get("HeaderDir/GeometrySummary")
 
@@ -79,12 +83,44 @@ def main(args):
 
   microTreeFile = ROOT.TFile.Open(args.microTreeFile)
   defTree = microTreeFile.Get("default")
+
+  # set up plot for all OOFV sources
+  histCanv = ROOT.TCanvas("histCanv", "oofvSources", 1200,800)
+  histOOFV = ROOT.TH1F("histOOFV", "oofvSources", 6,-.5,5.5)
+  histOOFV.GetXaxis().SetBinLabel(1, "FGD")
+  histOOFV.GetXaxis().SetBinLabel(2, "P0D")
+  histOOFV.GetXaxis().SetBinLabel(3, "ECal")
+  histOOFV.GetXaxis().SetBinLabel(4, "TPC OOFV")
+  histOOFV.GetXaxis().SetBinLabel(5, "Other")
+  histOOFV.GetXaxis().SetBinLabel(6, "TPC FV")
+  histOOFV.SetLineWidth(2)
+
   for entry in defTree:
     if entry.accum_level[0] > 12.5:
       vertexTruePos = (entry.Vertex_true_pos[0], entry.Vertex_true_pos[1], entry.Vertex_true_pos[2])
-      print getDetector(detLimits, vertexTruePos)
-      if getInTPCFV(vertexTruePos):
-        print "!!!"
+
+      detName = getDetector(detLimits, vertexTruePos)
+      inTPCFV = getInTPCFV(vertexTruePos)
+
+      if detName == DET_FGD:
+        histOOFV.Fill(0.)
+      elif detName == DET_P0D:
+        histOOFV.Fill(1.)
+      elif detName == DET_ECAL:
+        histOOFV.Fill(2.)
+      elif detName == DET_TPC:
+        if inTPCFV:
+          histOOFV.Fill(5.)
+        else:
+          histOOFV.Fill(3.)
+      else:
+        histOOFV.Fill(4.)
+
+  histCanv.cd()
+  histOOFV.Draw("HIST E0")
+
+  histCanv.SaveAs("{0}.png".format(args.outName))
+  histCanv.SaveAs("{0}.eps".format(args.outName))
 
 def getLimits(args, inTree):
   # load ROOT libraries
@@ -129,8 +165,6 @@ def getDetector(limits, pos):
       inRange &= (pos[2] >= extentVals[2][0])
       inRange &= (pos[2] <= extentVals[2][1])
 
-      print extentVals
-
       if inRange:
         detector = det
         break
@@ -144,10 +178,10 @@ def getInTPCFV(pos):
   inFV = False
 
   for tpcRange in DET_TPC_FV_RANGE:
-    inRange = False
+    inRange = True
 
-    inRange &= (pos[0] >= tpcRange[0][0])
-    inRange &= (pos[0] <= tpcRange[0][1])
+    inRange &= (abs(pos[0]) >= tpcRange[0][0])
+    inRange &= (abs(pos[0]) <= tpcRange[0][1])
     inRange &= (pos[1] >= tpcRange[1][0])
     inRange &= (pos[1] <= tpcRange[1][1])
     inRange &= (pos[2] >= tpcRange[2][0])
@@ -165,6 +199,7 @@ def checkArguments():
   parser.add_argument("--geomFile", type=str, help="Analysis file for extracting geometry information", default="/data/eddy/t2k/nd280/production006/B/mcp/neut/2010-11-air/magnet/run4/trexanal/oa_nt_beam_90400000-0000_jrvqsli66bf2_trexanal_000_prod6amagnet201011airc.root")
   parser.add_argument("--microTreeFile", type=str, help="Highland micro tree for reading OOFV background", default="/home/eddy/t2k/workspaces/highlandGasInteractions/highland2/eddyTREx/run/highStatsBeam.root")
   parser.add_argument("--oaAnalysisLibs", type=str, help="Libraries to use for reading oaAnalysis files", default="/home/eddy/t2k/workspaces/highlandGasInteractions/nd280AnalysisTools/v1r10/Linux-x86_64/AnalysisTools/libReadoaAnalysis/libReadoaAnalysis.so")
+  parser.add_argument("--outName", type=str, help="Name to save for output histograms", default="oofvSources")
 
   return parser.parse_args()
 
