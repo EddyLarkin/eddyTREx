@@ -1,4 +1,5 @@
 # python
+import os
 import glob
 import argparse
 import subprocess
@@ -8,11 +9,16 @@ import ROOT
 
 MAX_ACCUM = 12
 
+LOCAL_DIR_TMP = "/data/t2k/phrmav/tmp"
+LOCAL_DIR_SKIM = "/data/t2k/phrmav/skim"
+
 def main(args):
   if(args.makeCSV):
     makeCSVFile(args)
   if(args.checkCSV):
     checkCSVFile(args)
+  if(args.probeData):
+    probeData(args)
 
 def makeCSVFile(args):
   microTrees = []
@@ -48,6 +54,9 @@ def checkCSVFile(args):
 
     print outMSG
 
+def probeData(args):
+  fileIDs = readCSVFile(args)
+  setupGRID(args)
 
 def readCSVFile(args):
   outDict = {}
@@ -66,6 +75,11 @@ def readCSVFile(args):
 
   return outDict
 
+def setupGRID(args):
+  subprocess.call(["/data/t2k/phrmav/script/setup-emi3-ui-example.sh"], shell=True)
+  os.environ["LFC_HOST"] = "lfc.gridpp.rl.ac.uk"
+  subprocess.call(["voms-proxy-init", "-voms", "t2k.org", "-valid", "72:00"])
+
 def getIsSkimmed(args, run, subRun):
   return False
 
@@ -82,6 +96,7 @@ def checkArguments():
 
   parser.add_argument("--makeCSV", action="store_true", help="Make CSV file where to store and access run,subrun,event")
   parser.add_argument("--checkCSV", action="store_true", help="Check the status of events from the specified CSV file")
+  parser.add_argument("--probeData", action="store_true", help="Make sure we can find the data we're trying to download")
 
   return parser.parse_args()
 
