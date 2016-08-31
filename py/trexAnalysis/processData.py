@@ -11,8 +11,8 @@ RD = "rd"
 NEUT = "neut"
 GENIE = "genie"
 
-DATA_ROOT = "/data/eddy/t2k/ND280"
-FLAT_ROOT = "/data/eddy/t2k/flats"
+DATA_ROOT = "/data/t2k/data"
+FLAT_ROOT = "/data/t2k/phrmav/gasAnalysisFlats"
 
 DATA_RD = "{0}/production006/I/rdp/ND280/*/anal/*.root".format(DATA_ROOT)
 DATA_NEUT = "{0}/production006/H/mcp/neut/*/*/*/anal/*.root".format(DATA_ROOT)
@@ -115,6 +115,10 @@ def listData(args, dataType):
       flatTreeRoot = "{0}/{1}".format(flatRoot, run)
       listRoot = "{0}/lists".format(flatTreeRoot)
 
+      print "Rebuilding {0}".format(listRoot)
+      subprocess.call(["rm", "-rf", listRoot])
+      subprocess.call(["mkdir", "-p", listRoot])
+
       # build dirs
       subprocess.call(["mkdir", "-p", flatTreeRoot])
 
@@ -134,10 +138,6 @@ def listData(args, dataType):
         if ind >= len(fileList):
           break
         nFiles += 1
-
-        print "Removing {0}".format(listRoot)
-        subprocess.call(["rm", "-rf", listRoot])
-        subprocess.call(["mkdir", "-p", listRoot])
 
       if nFiles>0:
         listName = "{0}/flats_{1}-to-{2}.list".format(listRoot, i, i+nFiles)
@@ -198,6 +198,7 @@ def processData(args, dataType):
 
         print "Submitting {0} to long queue".format(scriptFile)
         jobCommand = ["bsub", "-q", "long", "-oo", logFile, "-G", "finalyeargrp", scriptFile]
+        subprocess.call(jobCommand)
 
 def checkArguments():
   parser = argparse.ArgumentParser(description="Process TREx analysis data")
@@ -208,7 +209,7 @@ def checkArguments():
 
   parser.add_argument("--pattern", type=str, help="Pattern to restrict processing to", default="")
 
-  parser.add_argument("--chunkSize", type=int, help="Number of files per chunk", default=100)
+  parser.add_argument("--chunkSize", type=int, help="Number of files per chunk", default=40)
   parser.add_argument("--nFiles", type=int, help="Number of chunks to process at one time", default=800)
 
   parser.add_argument("--list", action="store_true", help="Make lists of files ready to process")
