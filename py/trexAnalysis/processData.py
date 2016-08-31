@@ -101,6 +101,7 @@ def listData(args, dataType):
 
     for info in types:
       if (run >= info[1]) and (run <= info[2]):
+        print info[0]
         runInfo = info
         break
 
