@@ -6,9 +6,6 @@ import subprocess
 # ROOT
 import ROOT
 
-# eddy
-import trexAnalysis.parameters
-
 RD = "rd"
 NEUT = "neut"
 GENIE = "genie"
@@ -26,6 +23,7 @@ DIRS = (  RUN2WATER,
           RUN3C,
           RUN4WATER,
           RUN4AIR     )
+#DIRS = ( RUN2WATER, )
 
 TREES_DEF = ( "default", "truth", "config", "header" )
 TREES_SYS = ( "all_sys", )
@@ -108,12 +106,12 @@ def getFileSets(args):
   toProcess = getToProcess(args)
   fileSets = {}
 
-  for key, runDir in toProcess.iteritems():
+  for key, rootDir in toProcess.iteritems():
     fileSets[key] = {}
     for runDir in DIRS:
       fileSets[key][runDir] = []
 
-      fileNames = glob.glob("{0}/{1}/flat/flats_*.root".format(args.rdRoot, runDir))
+      fileNames = glob.glob("{0}/{1}/flat/flats_*.root".format(rootDir, runDir))
       for fileName in fileNames:
         fileSets[key][runDir].append(fileName)
 
@@ -123,10 +121,10 @@ def getFileAlls(args):
   toProcess = getToProcess(args)
   fileAlls = {}
 
-  for key, runDir in toProcess.iteritems():
+  for key, rootDir in toProcess.iteritems():
     fileAlls[key] = {}
     for runDir in DIRS:
-      fileName = "{0}/{1}/flat/all_in_folder.root".format(args.rdRoot, runDir)
+      fileName = "{0}/{1}/flat/all_in_folder.root".format(rootDir, runDir)
       fileAlls[key][runDir] = fileName
 
   return fileAlls
@@ -142,6 +140,17 @@ def getToProcess(args):
 
   return toProcess
 
+def getRoot(type):
+  root = ""
+  if type == RD:
+    root = args.rdRoot
+  elif type == NEUT:
+    root = args.genieRoot
+  elif type == GENIE:
+    root = args.neutRoot
+
+  return root
+
 def checkArguments():
   parser = argparse.ArgumentParser(description="Produce plots for gas and beam")
   parser.add_argument("--plotFolder", type=str, help="Folder to put plots in", default="plots")
@@ -153,9 +162,9 @@ def checkArguments():
   parser.add_argument("--neut", action="store_true", help="Use neut files")
   parser.add_argument("--genie", action="store_true", help="Use genie files")
 
-  parser.add_argument("--rdRoot", type=str, help="Folder for real data files", default="/data/eddy/t2k/gasAnalysisFlats/production006/I/rdp")
-  parser.add_argument("--neutRoot", type=str, help="Folder for neut files", default="/data/eddy/t2k/gasAnalysisFlats/production006/H/neut")
-  parser.add_argument("--genieRoot", type=str, help="Folder for genie files", default="/data/eddy/t2k/gasAnalysisFlats/production006/H/genie")
+  parser.add_argument("--rdRoot", type=str, help="Folder for real data files", default="/data/t2k/phrmav/gasAnalysisFlats/production006/I/rdp")
+  parser.add_argument("--neutRoot", type=str, help="Folder for neut files", default="/data/t2k/phrmav/gasAnalysisFlats/production006/H/neut")
+  parser.add_argument("--genieRoot", type=str, help="Folder for genie files", default="/data/t2k/phrmav/gasAnalysisFlats/production006/H/genie")
 
   return parser.parse_args()
 
