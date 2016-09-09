@@ -24,7 +24,7 @@ DIRS = (  RUN2WATER,
           RUN3C,
           RUN4WATER,
           RUN4AIR     )
-#DIRS = ( RUN2WATER, )
+DIRS = ( RUN2WATER, )
 
 TREE_SYS = ( "all_syst" )
 
@@ -44,7 +44,6 @@ def getSingleBinSyst(args):
 
   for key, fileSet in fileSets.iteritems():
     print "--- Single bin systematics for {0} ---".format(key)
-    print "  Using cut-off of {0}".format(args.cutOff)
     bigTree = ROOT.TChain(TREE_SYS)
     for runName, runFiles in fileSet.iteritems():
       for file in runFiles:
@@ -53,16 +52,16 @@ def getSingleBinSyst(args):
 
     print "  {0} events total".format(bigTree.GetEntries())
 
-    allToyBinContents = []
-    unweightedBinContents = 0.
-    for i in range(1000):
-      allToyBinContents.append(0.)
+    allWeights = []
+    allDiff2s = []
+    allEvents = 0
 
     for entry in bigTree:
       # ignore entries that haven't passed the selection
       if entry.accum_level[0] < 11:
         continue
       weightBuff = entry.weight_syst_total
+      allEvents += 1
 
       buffSum = 0.
       buffEntries = 0
@@ -77,29 +76,29 @@ def getSingleBinSyst(args):
       buffVariance = buffDiff2Sum / buffEntries
 
       # some systematics can be artificially inflated by errors in computing them - ignore these
-      if buffVariance < args.cutOff**2:
-        unweightedBinContents += 1
-        i = 0
+      if buffVariance < .4**2:
         for weight in weightBuff:
-          allToyBinContents[i] += weight
-          i += 1
+          diff2 = (weight - buffMean)**2
+          allWeights.append(weight)
+          allDiff2s.append(diff2)
 
-    # get bin content variance across toys
-    binContentSum = 0.
-    for i in range(1000):
-      binContentSum += allToyBinContents[i]
-    mean = binContentSum / 1000.
-
-    binContentDiff2Sum = 0.
-    for i in range(1000):
-      diff2 = (allToyBinContents[i] - mean)**2
-      binContentDiff2Sum += diff2
-    variance = binContentDiff2Sum / 1000.
+    allWeightSum = 0.
+    allWeightEntries = 0
+    for weight in allWeights:
+      allWeightSum += weight
+      allWeightEntries += 1
+    mean = allWeightSum / float(allWeightEntries)
+    allDiff2Sum = 0.
+    allDiff2Entries = 0
+    for diff2 in allDiff2s:
+      allDiff2Sum += diff2
+      allDiff2Entries += 1
+    variance = allDiff2Sum / float(allDiff2Entries)
     sigma = math.sqrt(variance)
 
-    print "  Total fractional systematic is {0}".format(sigma/mean)
-    print "  Final average bin content is {0} +- {1}".format(mean, sigma)
-    print "    as fraction of total is {0} +- {1}".format(mean/float(unweightedBinContents), sigma/float(unweightedBinContents))
+    print "  Total fractional systematic is {0}".format(sigma)
+    print "  Final average weight is {0} +- {1}".format(mean, mean*sigma)
+    print "  Final events are {0} +- {1}".format(mean*float(allEvents), mean*sigma*float(allEvents))
 
 def getMomBinSyst(args):
   fileSets = getFileSets(args)
@@ -118,28 +117,17 @@ def getMomBinSyst(args):
 
   for key, fileSet in fileSets.iteritems():
     print "--- Momentum bin systematics for {0} ---".format(key)
-    print "  Using cut-off of {0}".format(args.cutOff)
     bigTree = ROOT.TChain(TREE_SYS)
     for runName, runFiles in fileSet.iteritems():
       for file in runFiles:
         bigTree.Add(file)
-        break
 
     print "  {0} events total".format(bigTree.GetEntries())
-
-    allToyBinContents = {}
-    unweightedBinContents = {}
-    for key in keys:
-      allToyBinContents[key] = []
-      unweightedBinContents[key] = 0
-      for i in range(1000):
-        allToyBinContents[key].append(0.)
 
     for entry in bigTree:
       # ignore entries that haven't passed the selection
       if entry.accum_level[0] < 11:
         continue
-      weightBuff = entry.weight_syst_total
 
       bin = None
       for key in keys:
@@ -148,6 +136,9 @@ def getMomBinSyst(args):
           break
 
       if bin:
+        weightBuff = entry.weight_syst_total
+        allEvents[bin] += 1
+
         buffSum = 0.
         buffEntries = 0
         for weight in weightBuff:
@@ -161,33 +152,37 @@ def getMomBinSyst(args):
         buffVariance = buffDiff2Sum / buffEntries
 
         # some systematics can be artificially inflated by errors in computing them - ignore these
-        if buffVariance < args.cutOff**2:
-          unweightedBinContents[bin] += 1
-          i = 0
+        if buffVariance < .4**2:
           for weight in weightBuff:
-            allToyBinContents[bin][i] += weight
-            i += 1
+            diff2 = (weight - buffMean)**2
+            allWeights[key].append(weight)
+            allDiff2s[key].append(diff2)
 
     for key in keys:
       print "  Bin from {0} to {1}".format(key[0], key[1])
-      # get bin content variance across toys
-      binContentSum = 0.
-      for i in range(1000):
-        binContentSum += allToyBinContents[key][i]
-      mean = binContentSum / 1000.
+      mean = 0.
+      variance = 0.
+      sigma = 0.
 
-      binContentDiff2Sum = 0.
-      for i in range(1000):
-        diff2 = (allToyBinContents[key][i] - mean)**2
-        binContentDiff2Sum += diff2
-      variance = binContentDiff2Sum / 1000.
-      sigma = math.sqrt(variance)
+      allWeightSum = 0.
+      allWeightEntries = 0
+      for weight in allWeights[key]:
+        allWeightSum += weight
+        allWeightEntries += 1
+      if(allWeightEntries):
+        mean = allWeightSum / float(allWeightEntries)
+      allDiff2Sum = 0.
+      allDiff2Entries = 0
+      for diff2 in allDiff2s[key]:
+        allDiff2Sum += diff2
+        allDiff2Entries += 1
+      if(allDiff2Entries):
+        variance = allDiff2Sum / float(allDiff2Entries)
+        sigma = math.sqrt(variance)
 
-      if mean:
-        print "  Total fractional systematic is {0}".format(sigma/mean)
-      print "  Final average bin content is {0} +- {1}".format(mean, sigma)
-      if unweightedBinContents[key]:
-        print "    as fraction of total is {0} +- {1}".format(mean/float(unweightedBinContents[key]), sigma/float(unweightedBinContents[key]))
+      print "    Total fractional systematic is {0}".format(sigma)
+      print "    Final average weight is {0} +- {1}".format(mean, mean*sigma)
+      print "    Final events are {0} +- {1}".format(mean*float(allEvents[key]), mean*sigma*float(allEvents[key]))
 
 def getFileSets(args):
   toProcess = getToProcess(args)
@@ -229,8 +224,6 @@ def checkArguments():
 
   parser.add_argument("--neut", action="store_true", help="Use neut files")
   parser.add_argument("--genie", action="store_true", help="Use genie files")
-
-  parser.add_argument("--cutOff", type=float, help="Cut off for event sigma to avoid distortion from badly propagated events", default=2.)
 
   parser.add_argument("--neutRoot", type=str, help="Folder for neut files", default="/data/t2k/phrmav/gasAnalysisFlats/production006/H/mcp/neut")
   parser.add_argument("--genieRoot", type=str, help="Folder for genie files", default="/data/t2k/phrmav/gasAnalysisFlats/production006/H/mcp/genie")
