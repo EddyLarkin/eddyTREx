@@ -8,6 +8,7 @@ import subprocess
 # ROOT
 import ROOT
 
+RD = "rd"
 NEUT = "neut"
 GENIE = "genie"
 
@@ -24,7 +25,7 @@ DIRS = (  RUN2WATER,
           RUN3C,
           RUN4WATER,
           RUN4AIR     )
-#DIRS = ( RUN2WATER, )
+DIRS = ( RUN2WATER, )
 
 TREE_SYS = ( "all_syst" )
 
@@ -558,6 +559,8 @@ def getFileSets(args):
 
 def getToProcess(args):
   toProcess = {}
+  if args.rd:
+    toProcess[RD] = args.rdRoot
   if args.neut:
     toProcess[NEUT] = args.neutRoot
   if args.genie:
@@ -567,7 +570,9 @@ def getToProcess(args):
 
 def getRoot(type):
   root = ""
-  if type == NEUT:
+  if type == RD:
+    root = args.rdRoot
+  elif type == NEUT:
     root = args.genieRoot
   elif type == GENIE:
     root = args.neutRoot
@@ -583,11 +588,13 @@ def checkArguments():
   parser.add_argument("--hotProtonBin", action="store_true", help="Compute systematics for high momentum proton bin analysis")
   parser.add_argument("--maxProtonMomBin", action="store_true", help="Compute systematics for max proton momentum proton bin analysis")
 
+  parser.add_argument("--rd", action="store_true", help="Use real data files")
   parser.add_argument("--neut", action="store_true", help="Use neut files")
   parser.add_argument("--genie", action="store_true", help="Use genie files")
 
   parser.add_argument("--cutOff", type=float, help="Cut off for event sigma to avoid distortion from badly propagated events", default=2.)
 
+  parser.add_argument("--rdRoot", type=str, help="Folder for real data files", default="/data/t2k/phrmav/gasAnalysisFlats/production006/I/rdp")
   parser.add_argument("--neutRoot", type=str, help="Folder for neut files", default="/data/t2k/phrmav/gasAnalysisFlats/production006/H/mcp/neut")
   parser.add_argument("--genieRoot", type=str, help="Folder for genie files", default="/data/t2k/phrmav/gasAnalysisFlats/production006/H/mcp/genie")
 
