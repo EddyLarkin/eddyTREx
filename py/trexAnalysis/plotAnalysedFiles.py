@@ -118,7 +118,7 @@ NOM_NEUT_VAL_ANG = (210.113, 159.422, 134.313, 139.135, 139.957, 174.669, 281.54
 NOM_NEUT_ERR_ANG = (0.090582, 0.080753, 0.088635, 0.080005, 0.081086, 0.084838, 0.084137, 0.087780, 0.105585, 0.104565)
 
 # nominal values for path multiplicity plots
-NOM_BINNING_PATH = (11, -0.5,10.5)
+NOM_BINNING_PATH = (11, 0.5,10.5)
 
 NOM_DATA_VAL_PATH = (188., 89., 25., 5., 2., 1., 0., 0., 0., 0.)
 NOM_GENIE_VAL_PATH = (1939.1, 1925.26, 539.458, 198.339, 89.4029, 34.8228, 23.4256, 23.4256, 17.3325, 11.5105, 4.622)
@@ -127,7 +127,7 @@ NOM_NEUT_VAL_PATH = (1222.49, 1370.08, 439.752, 171.89, 47.645, 16.1337, 5.8665,
 NOM_NEUT_ERR_PATH = (0.082541, 0.099398, 0.138663, 0.175863, 0.227779, 0.341496, 0.303745, 0.333594, 0., 0.466606)
 
 # nominal values for proton multiplicity plots
-NOM_BINNING_PMULT = (10, 0.5,10.5)
+NOM_BINNING_PMULT = (11, -0.5,10.5)
 
 NOM_DATA_VAL_PMULT = (275., 26., 7., 2., 0., 0., 0., 0., 0., 0., 0.,)
 NOM_GENIE_VAL_PMULT = (3377.93, 1047.98, 232.437, 70.0422, 28.0008, 15.5793, 6.733, 1.911, 0.9555, 0.9555, 0.9555)
@@ -315,6 +315,10 @@ def makeCSPlot(args, binMin=0.,binMax=2000.):
     leg.AddEntry(neutHist, "Neut MC", "l")
     leg.AddEntry(genieHist, "Genie MC", "l")
 
+    print "Data:   {0} +- {1}".format(rdHist.GetBinContent(1), rdHist.GetBinError(1))
+    print "GENIE:  {0} +- {1}".format(genieHist.GetBinContent(1), genieHist.GetBinError(1))
+    print "NEUT :  {0} +- {1}".format(neutHist.GetBinContent(1), neutHist.GetBinError(1))
+
     genieHist.Draw("E1 SAME")
     neutHist.Draw("E1 SAME")
     rdHist.Draw("E1 SAME")
@@ -452,9 +456,9 @@ def makePathMultPlot(args):
   myCanv.cd()
 
   if args.manual:
-    genieHist = ROOT.TH1D("genie", "Events passing selection by proton multiplicity;Proton multiplicity;Events", *NOM_BINNING_PATH)
+    genieHist = ROOT.TH1D("genie", "Events passing selection by path multiplicity;Path multiplicity;Events", *NOM_BINNING_PATH)
     neutHist = ROOT.TH1D("neut", "Neut", *NOM_BINNING_PATH)
-    rdHist = ROOT.TH1D("data", "Data", *NOM_BINNING_PATH)
+    rdHist = ROOT.TH1D("data", "Events passing selection by path multiplicity;Path multiplicity;Events", *NOM_BINNING_PATH)
 
     genieNorm = NOM_GENIE_VAL_SINGLE / GENIE_INT
     neutNorm = NOM_NEUT_VAL_SINGLE / NEUT_INT
