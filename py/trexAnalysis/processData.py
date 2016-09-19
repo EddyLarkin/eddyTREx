@@ -1,5 +1,6 @@
 # python
 import re
+import os
 import glob
 import argparse
 import subprocess
@@ -10,19 +11,23 @@ import ROOT
 RD = "rd"
 NEUT = "neut"
 GENIE = "genie"
+SAND = "sand"
 
 DATA_ROOT = "/data/t2k/data"
+EDDY_ROOT = "/data/t2k/phrmav/data"
 FLAT_ROOT = "/data/t2k/phrmav/gasAnalysisFlats"
 
 DATA_RD = "{0}/production006/I/rdp/ND280/*/anal/*.root".format(DATA_ROOT)
 DATA_NEUT = "{0}/production006/H/mcp/neut/*/*/*/anal/*.root".format(DATA_ROOT)
 DATA_GENIE = "{0}/production006/H/mcp/genie/*/*/*/anal/*.root".format(DATA_ROOT)
+DATA_SAND = "{0}/production006/B/mcp/neut/2010-11-air/sand/*/trexanal/*.root".format(EDDY_ROOT)
 
 DATA_FLUX = "{0}/fluxes/tuned13av1.1".format(DATA_ROOT)
 
 FLAT_RD = "{0}/production006/I/rdp".format(FLAT_ROOT)
 FLAT_NEUT = "{0}/production006/H/mcp/neut".format(FLAT_ROOT)
 FLAT_GENIE = "{0}/production006/H/mcp/genie".format(FLAT_ROOT)
+FLAT_SAND = "{0}/production006/B/mcp/sand".format(FLAT_ROOT)
 
 # see $PSYCHEUTILSROOT/src/AnalysisUtils.cxx for run ranges for run ranges
 RD_TYPES = (
@@ -40,7 +45,7 @@ NEUT_TYPES = (
               ("run3c", 90300016, 90300110, "{0}/run3c".format(DATA_FLUX)),
               ("run4water", 90410000, 90419999, 3250, "{0}/run4water".format(DATA_FLUX)),
               ("run4air", 90400000, 90409999, "{0}/run4air".format(DATA_FLUX))
-                                                                                       )
+                                                                                        )
 GENIE_TYPES = (
               ("run2water", 91210000, 91219999, "{0}/run2".format(DATA_FLUX)),
               ("run2air", 91200000, 91209999, "{0}/run2".format(DATA_FLUX)),
@@ -48,7 +53,11 @@ GENIE_TYPES = (
               ("run3c", 91300016, 91300110, "{0}/run3c".format(DATA_FLUX)),
               ("run4water", 91410000, 91419999, 3250, "{0}/run4water".format(DATA_FLUX)),
               ("run4air", 91400000, 91409999, "{0}/run4air".format(DATA_FLUX))
-                                                                                       )
+                                                                                        )
+
+SAND_TYPES = (
+              ("run3", 0, 99999999, "{0}/run3c".format(DATA_FLUX)),
+                                                                                        )
 
 def main(args):
   filePattern = ""
@@ -59,6 +68,8 @@ def main(args):
     dataType = NEUT
   elif args.genie:
     dataType = GENIE
+  elif args.sand:
+    dataType = SAND
 
   if args.list:
     listData(args, dataType)
@@ -82,6 +93,10 @@ def listData(args, dataType):
     filePattern = DATA_GENIE
     flatRoot = FLAT_GENIE
     types = GENIE_TYPES
+  elif dataType == SAND:
+    filePattern = DATA_SAND
+    flatRoot = FLAT_SAND
+    types = SAND_TYPES
   else:
     return
 
@@ -101,7 +116,6 @@ def listData(args, dataType):
 
     for info in types:
       if (run >= info[1]) and (run <= info[2]):
-        print info[0]
         runInfo = info
         break
 
@@ -147,7 +161,7 @@ def listData(args, dataType):
         listFile = open(listName, "w")
         for j in range(nFiles):
           ind = i+j
-          fileName = filesToProcess[ind]
+          fileName = fileList[ind]
           listFile.write("{0}\n".format(fileName))
         listFile.close()
 
@@ -164,6 +178,9 @@ def processData(args, dataType):
   elif dataType == GENIE:
     flatRoot = FLAT_GENIE
     types = GENIE_TYPES
+  elif dataType == SAND:
+    flatRoot = FLAT_SAND
+    types = SAND_TYPES
   else:
     return
 
@@ -186,27 +203,32 @@ def processData(args, dataType):
         scriptFile = listFile.replace(listRoot, scriptRoot).replace(".list", ".sh")
         logFile = listFile.replace(listRoot, logRoot).replace(".list", ".log")
 
-        scriptWriteable = open(scriptFile, "w")
+        print flatFile
+        if os.path.exists(flatFile) and not args.redo:
+          print "\033[35;1mAlready processed\033[0m {0}".format(flatFile)
+        else:
+          scriptWriteable = open(scriptFile, "w")
 
-        scriptWriteable.write("#!/bin/bash\n")
-        scriptWriteable.write("\n")
-        scriptWriteable.write("rm -f {0}\n".format(flatFile))
-        scriptWriteable.write("RunTRExAnalysis.exe -v -o {0} {1}".format(flatFile, listFile))
+          scriptWriteable.write("#!/bin/bash\n")
+          scriptWriteable.write("\n")
+          scriptWriteable.write("rm -f {0}\n".format(flatFile))
+          scriptWriteable.write("RunTRExAnalysis.exe -v -o {0} {1}".format(flatFile, listFile))
 
-        scriptWriteable.close()
+          scriptWriteable.close()
 
-        subprocess.call(["chmod", "774", scriptFile])
+          subprocess.call(["chmod", "774", scriptFile])
 
-        print "Submitting {0} to long queue".format(scriptFile)
-        jobCommand = ["bsub", "-q", "long", "-oo", logFile, "-G", "finalyeargrp", scriptFile]
-        subprocess.call(jobCommand)
+          print "Submitting {0} to long queue".format(scriptFile)
+          jobCommand = ["bsub", "-q", "long", "-oo", logFile, "-G", "finalyeargrp", scriptFile]
+          subprocess.call(jobCommand)
 
 def checkArguments():
   parser = argparse.ArgumentParser(description="Process TREx analysis data")
 
-  parser.add_argument("--rd", action="store_true", help="Process neut files")
-  parser.add_argument("--neut", action="store_true", help="Process neut files")
-  parser.add_argument("--genie", action="store_true", help="Process neut files")
+  parser.add_argument("--rd", action="store_true", help="Process real data files")
+  parser.add_argument("--neut", action="store_true", help="Process NEUT files")
+  parser.add_argument("--genie", action="store_true", help="Process GENIE files")
+  parser.add_argument("--sand", action="store_true", help="Process sand files")
 
   parser.add_argument("--pattern", type=str, help="Pattern to restrict processing to", default="")
 
@@ -214,7 +236,9 @@ def checkArguments():
   parser.add_argument("--nFiles", type=int, help="Number of chunks to process at one time", default=800)
 
   parser.add_argument("--list", action="store_true", help="Make lists of files ready to process")
-  parser.add_argument("--process", action="store_true", help="process files from lists")
+  parser.add_argument("--process", action="store_true", help="Process files from lists")
+
+  parser.add_argument("--redo", action="store_true", help="Redo files which have been processed")
 
   return parser.parse_args()
 
