@@ -8,14 +8,14 @@ import subprocess
 # ROOT
 import ROOT
 
-MAX_ACCUM = 13
-FLATS_PATTERN = "/data/eddy/t2k/gasAnalysisFlats/production006/I/rdp/run2air/flat/flats_*.root"
+MAX_ACCUM = 11
+FLATS_PATTERN = "/data/t2k/phrmav/gasAnalysisFlats/production006/I/rdp/*/flat/flats_*.root"
 
 def main(args):
   makeCSVFile(args)
 
 def makeCSVFile(args):
-  microTrees = glob.glob(FILE_PATTERN)
+  microTrees = glob.glob(FLATS_PATTERN)
 
   microChain = ROOT.TChain("default")
   for microTree in microTrees:
