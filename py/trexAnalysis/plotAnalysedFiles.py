@@ -93,6 +93,8 @@ NOM_GENIE_ERR_SINGLE = 0.092236
 NOM_NEUT_COL = 38
 NOM_NEUT_VAL_SINGLE = 355.032
 NOM_NEUT_ERR_SINGLE = 0.090080
+NOM_SAND_VAL_SINGLE = 7.726
+NOM_SAND_ERR_SINGLE = 2.360
 NOM_FLUX_SYST = 0.109875
 
 FLUX_FILE = "/home/phrmav/t2k/newHighland/psyche/psycheUtils/v3r7/data/tuned13av1.1/run1-4/nd5_tuned13av1.1_13anom_run1-4_fine.root"
@@ -107,6 +109,8 @@ NOM_GENIE_VAL_MOM = (626.141, 1394.9, 877.146, 490.006, 264.938, 187.43, 135.05,
 NOM_GENIE_ERR_MOM = (0.081270, 0.085126, 0.0921765, 0.110331, 0.111852, 0.114440, 0.128581, 0.106984, 0.131234, 0.122029)
 NOM_NEUT_VAL_MOM = (429.543, 936.461, 629.628, 331.302, 174.714, 112.875, 87.2237, 59.8061, 61.487, 456.876)
 NOM_NEUT_ERR_MOM = (0.0883060, 0.081537, 0.092485, 0.103761, 0.112368, 0.114474, 0.138796, 0.106348, 0.133936, 0.144392)
+NOM_SAND_VAL_MOM = (2.575, 0., 0., 0.643, 0., 0., 1.288,    0., 0., 0., 0.)
+NOM_SAND_ERR_MOM = (1.288, 0., 0., 0.643, 0., 0., 0.910, 0., 0., 0., 0.)
 
 # nominal values for muon angle plots
 NOM_BINNING_ANG = (10, -1.,1.)
@@ -116,6 +120,8 @@ NOM_GENIE_VAL_ANG = (338.202, 216.494, 229.826, 204.203, 204.957, 248.969, 357.5
 NOM_GENIE_ERR_ANG = (0.082626, 0.101407, 0.093476, 0.086628, 0.078598, 0.082144, 0.087098, 0.089970, 0.101364, 0.102221)
 NOM_NEUT_VAL_ANG = (210.113, 159.422, 134.313, 139.135, 139.957, 174.669, 281.544, 429.857, 525.914, 1084.99)
 NOM_NEUT_ERR_ANG = (0.090582, 0.080753, 0.088635, 0.080005, 0.081086, 0.084838, 0.084137, 0.087780, 0.105585, 0.104565)
+NOM_SAND_VAL_ANG = (0., 1.288, 0., 0., 0., 0., 0., 0., 0., 2.575, 2.575)
+NOM_SAND_ERR_ANG = (0., 0.910, 0., 0., 0., 0., 0., 0., 0., 1.288, 1.288)
 
 # nominal values for path multiplicity plots
 NOM_BINNING_PATH = (11, 0.5,10.5)
@@ -243,6 +249,8 @@ def makeCSPlot(args, binMin=0.,binMax=2000.):
 
   sumFluxSyst = 0.
   nFluxSyst = 0
+  energyExp = 0.
+  sumFlux = 0.
   for i in range(1, nBins+1):
     content = fluxHist.GetBinContent(i)
     min = fluxHist.GetBinLowEdge(i) * 1000. # MeV
@@ -254,6 +262,8 @@ def makeCSPlot(args, binMin=0.,binMax=2000.):
         sumFluxSyst += syst
         break
 
+    energyExp += content * mid
+    sumFlux += content
 
     bins.append(min)
     if max < binMax:
@@ -263,6 +273,8 @@ def makeCSPlot(args, binMin=0.,binMax=2000.):
       contents.append(content*norm)
       bins.append(max)
       break
+
+  energyExp /= sumFlux
 
   # get a pseudo average for pretty plots (doesn't really matter since we have separate axes for this)
   integral = fluxHist.Integral()
@@ -309,6 +321,12 @@ def makeCSPlot(args, binMin=0.,binMax=2000.):
     rdHist.SetBinError(1, math.sqrt(NOM_DATA_VAL_SINGLE**CORR_ALL))
     rdHist.SetLineWidth(2)
     rdHist.SetLineColor(NOM_DATA_COL)
+
+    # sand
+    genieHist.SetBinContent(1, genieHist.GetBinContent(1) + NOM_SAND_VAL_SINGLE)
+    genieHist.SetBinError(1, math.sqrt(genieHist.GetBinError(1)**2 + NOM_SAND_ERR_SINGLE**2))
+    neutHist.SetBinContent(1, neutHist.GetBinContent(1) + NOM_SAND_VAL_SINGLE)
+    neutHist.SetBinError(1, math.sqrt(neutHist.GetBinError(1)**2 + NOM_SAND_ERR_SINGLE**2))
 
     leg = ROOT.TLegend(0.65,0.75, 0.9,0.9)
     leg.AddEntry(rdHist, "Real data", "l")
@@ -372,6 +390,12 @@ def makeMomentumPlot(args):
       rdHist.SetLineWidth(2)
       rdHist.SetLineColor(NOM_DATA_COL)
 
+      # sand
+      genieHist.SetBinContent(i+1, genieHist.GetBinContent(i+1) + NOM_SAND_VAL_MOM[i])
+      genieHist.SetBinError(i+1, math.sqrt(genieHist.GetBinError(i+1)**2 + NOM_SAND_ERR_MOM[i]**2))
+      neutHist.SetBinContent(i+1, neutHist.GetBinContent(i+1) + NOM_SAND_VAL_MOM[i])
+      neutHist.SetBinError(i+1, math.sqrt(neutHist.GetBinError(i+1)**2 + NOM_SAND_ERR_MOM[i]**2))
+
     leg = ROOT.TLegend(0.65,0.75, 0.9,0.9)
     leg.AddEntry(rdHist, "Real data", "l")
     leg.AddEntry(neutHist, "Neut MC", "l")
@@ -430,6 +454,12 @@ def makeCosThetaPlot(args):
       rdHist.SetLineWidth(2)
       rdHist.SetLineColor(NOM_DATA_COL)
 
+      # sand
+      genieHist.SetBinContent(i+1, genieHist.GetBinContent(i+1) + NOM_SAND_VAL_ANG[i])
+      genieHist.SetBinError(i+1, math.sqrt(genieHist.GetBinError(i+1)**2 + NOM_SAND_ERR_ANG[i]**2))
+      neutHist.SetBinContent(i+1, neutHist.GetBinContent(i+1) + NOM_SAND_VAL_ANG[i])
+      neutHist.SetBinError(i+1, math.sqrt(neutHist.GetBinError(i+1)**2 + NOM_SAND_ERR_ANG[i]**2))
+
     leg = ROOT.TLegend(0.1,0.75, 0.35,0.9)
     leg.AddEntry(rdHist, "Real data", "l")
     leg.AddEntry(neutHist, "Neut MC", "l")
@@ -475,6 +505,12 @@ def makePathMultPlot(args):
       rdHist.SetBinError(i+1, math.sqrt(NOM_DATA_VAL_PATH[i]*CORR_ALL))
       rdHist.SetLineWidth(2)
       rdHist.SetLineColor(NOM_DATA_COL)
+
+    # sand
+    genieHist.SetBinContent(1, genieHist.GetBinContent(1) + NOM_SAND_VAL_SINGLE)
+    genieHist.SetBinError(1, math.sqrt(genieHist.GetBinError(1)**2 + NOM_SAND_ERR_SINGLE**2))
+    neutHist.SetBinContent(1, neutHist.GetBinContent(1) + NOM_SAND_VAL_SINGLE)
+    neutHist.SetBinError(1, math.sqrt(neutHist.GetBinError(1)**2 + NOM_SAND_ERR_SINGLE**2))
 
     leg = ROOT.TLegend(0.65,0.75, 0.9,0.9)
     leg.AddEntry(rdHist, "Real data", "l")
